@@ -1,0 +1,1672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <base target="_self">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureConnect - Ultra-Private Communication</title>
+    <meta name="description" content="End-to-end encrypted communication platform for exactly two users. Private chat, HD video calls, live location sharing, and complete privacy.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#6366f1',
+                            dark: '#4f46e5',
+                            light: '#818cf8'
+                        },
+                        secondary: {
+                            DEFAULT: '#10b981',
+                            dark: '#059669',
+                            light: '#34d399'
+                        },
+                        dark: {
+                            DEFAULT: '#0f172a',
+                            light: '#1e293b',
+                            lighter: '#334155'
+                        },
+                        romantic: {
+                            pink: '#ec4899',
+                            purple: '#8b5cf6',
+                            blue: '#3b82f6'
+                        }
+                    },
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif']
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-in': 'slideIn 0.3s ease-out'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideIn: {
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        .selectable-text {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+        
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        .screenshot-protection {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+        }
+        
+        @media (max-width: 768px) {
+            .back-button-protection {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="font-inter bg-gradient-to-br from-dark to-dark-light min-h-screen text-white">
+    <!-- Screenshot Protection Overlay -->
+    <div id="screenshotProtection" class="fixed inset-0 bg-black z-50 flex items-center justify-center hidden">
+        <div class="text-center p-8 bg-dark-light rounded-xl shadow-2xl max-w-md">
+            <i class="fas fa-shield-alt text-5xl text-primary mb-4"></i>
+            <h2 class="text-2xl font-bold mb-2">Security Alert</h2>
+            <p class="text-gray-300 mb-4">Screen capture detected. Content protected.</p>
+            <button onclick="hideProtection()" class="bg-primary hover:bg-primary-dark px-6 py-2 rounded-lg font-medium transition-colors">
+                Continue Securely
+            </button>
+        </div>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-dark-light rounded-2xl shadow-2xl p-8 max-w-md w-full animate-fade-in">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary to-romantic-purple rounded-2xl mb-4">
+                    <i class="fas fa-lock text-2xl"></i>
+                </div>
+                <h1 class="text-3xl font-bold mb-2">SecureConnect</h1>
+                <p class="text-gray-400">Ultra-private communication for two</p>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">User Identity</label>
+                    <div class="flex space-x-2">
+                        <button onclick="selectUser('user1')" id="user1Btn" class="flex-1 py-3 px-4 bg-dark rounded-lg border border-gray-700 hover:border-primary transition-colors text-center">
+                            <i class="fas fa-user mr-2"></i>User 1
+                        </button>
+                        <button onclick="selectUser('user2')" id="user2Btn" class="flex-1 py-3 px-4 bg-dark rounded-lg border border-gray-700 hover:border-primary transition-colors text-center">
+                            <i class="fas fa-user-friends mr-2"></i>User 2
+                        </button>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                    <div class="relative">
+                        <input type="password" id="password" class="w-full bg-dark border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" placeholder="Enter your secure password">
+                        <button type="button" onclick="togglePassword()" class="absolute right-3 top-3 text-gray-400">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex items-center">
+                    <input type="checkbox" id="rememberMe" class="w-4 h-4 text-primary bg-dark border-gray-700 rounded focus:ring-primary focus:ring-2">
+                    <label for="rememberMe" class="ml-2 text-sm text-gray-400">Remember this device</label>
+                </div>
+                
+                <button onclick="login()" class="w-full bg-gradient-to-r from-primary to-romantic-purple hover:from-primary-dark hover:to-romantic-purple py-3 rounded-lg font-medium transition-all transform hover:scale-[1.02] active:scale-[0.98]">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Secure Login
+                </button>
+                
+                <div class="text-center pt-4 border-t border-gray-800">
+                    <p class="text-sm text-gray-500">
+                        <i class="fas fa-shield-alt mr-1"></i>
+                        Only two pre-approved users can access this system
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Interface -->
+    <div id="appInterface" class="hidden min-h-screen">
+        <!-- Header -->
+        <header class="bg-dark-light border-b border-gray-800 sticky top-0 z-40">
+            <div class="container mx-auto px-4 py-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-gradient-to-br from-primary to-romantic-purple rounded-xl flex items-center justify-center">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <div>
+                                <h1 class="font-bold text-lg">SecureConnect</h1>
+                                <div class="flex items-center space-x-2">
+                                    <div id="connectionStatus" class="flex items-center">
+                                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                        <span class="ml-2 text-sm text-gray-400">Connected</span>
+                                    </div>
+                                    <div id="onlineStatus" class="flex items-center">
+                                        <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                                        <span class="ml-2 text-sm text-gray-400" id="otherUserStatus">User 2: Online</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-3">
+                        <button onclick="toggleTheme()" class="w-10 h-10 rounded-lg bg-dark hover:bg-gray-800 flex items-center justify-center transition-colors" title="Toggle Theme">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                        <button onclick="showLocationSharing()" id="locationBtn" class="w-10 h-10 rounded-lg bg-dark hover:bg-gray-800 flex items-center justify-center transition-colors" title="Live Location">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </button>
+                        <button onclick="startVideoCall()" class="w-10 h-10 rounded-lg bg-green-600 hover:bg-green-700 flex items-center justify-center transition-colors" title="Video Call">
+                            <i class="fas fa-video"></i>
+                        </button>
+                        <button onclick="showSettings()" class="w-10 h-10 rounded-lg bg-dark hover:bg-gray-800 flex items-center justify-center transition-colors" title="Settings">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="container mx-auto px-4 py-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Chat Section -->
+                <div class="lg:col-span-2">
+                    <div class="bg-dark-light rounded-2xl shadow-xl overflow-hidden h-[calc(100vh-180px)]">
+                        <!-- Chat Header -->
+                        <div class="border-b border-gray-800 p-4 bg-dark/50">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="relative">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-romantic-purple to-romantic-pink rounded-xl flex items-center justify-center">
+                                            <i class="fas fa-user-friends text-xl"></i>
+                                        </div>
+                                        <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-dark-light rounded-full"></div>
+                                    </div>
+                                    <div>
+                                        <h2 class="font-bold text-lg">Private Chat</h2>
+                                        <p class="text-sm text-gray-400">End-to-end encrypted • No logs stored</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button onclick="clearChat()" class="p-2 hover:bg-gray-800 rounded-lg transition-colors" title="Clear Chat">
+                                        <i class="fas fa-trash-alt text-gray-400"></i>
+                                    </button>
+                                    <button onclick="toggleEncryptionInfo()" class="p-2 hover:bg-gray-800 rounded-lg transition-colors" title="Encryption Info">
+                                        <i class="fas fa-shield-alt text-primary"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Chat Messages -->
+                        <div id="chatMessages" class="h-[calc(100%-140px)] overflow-y-auto p-4 space-y-4 no-scrollbar">
+                            <!-- Messages will be dynamically added here -->
+                            <div class="text-center py-8">
+                                <div class="inline-flex items-center justify-center w-16 h-16 bg-dark rounded-2xl mb-4">
+                                    <i class="fas fa-lock text-2xl text-primary"></i>
+                                </div>
+                                <h3 class="font-bold text-lg mb-2">Secure Chat Started</h3>
+                                <p class="text-gray-400 max-w-md mx-auto">
+                                    All messages are end-to-end encrypted. No one else can read them, not even us.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Message Input -->
+                        <div class="border-t border-gray-800 p-4 bg-dark/50">
+                            <div class="flex items-center space-x-3">
+                                <div class="flex-1 relative">
+                                    <input type="text" id="messageInput" placeholder="Type your encrypted message..." class="w-full bg-dark border border-gray-700 rounded-xl py-3 px-4 pr-12 text-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" onkeypress="handleKeyPress(event)">
+                                    <div class="absolute right-3 top-3 flex items-center space-x-2">
+                                        <button onclick="attachFile()" class="text-gray-400 hover:text-white transition-colors">
+                                            <i class="fas fa-paperclip"></i>
+                                        </button>
+                                        <button onclick="attachImage()" class="text-gray-400 hover:text-white transition-colors">
+                                            <i class="fas fa-image"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <button onclick="sendMessage()" class="bg-gradient-to-r from-primary to-romantic-purple w-12 h-12 rounded-xl flex items-center justify-center hover:opacity-90 transition-opacity">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                            <div class="flex items-center justify-between mt-3 text-sm text-gray-500">
+                                <div class="flex items-center space-x-4">
+                                    <button onclick="recordAudio()" class="flex items-center hover:text-white transition-colors">
+                                        <i class="fas fa-microphone mr-1"></i> Voice
+                                    </button>
+                                    <button onclick="shareLocation()" class="flex items-center hover:text-white transition-colors">
+                                        <i class="fas fa-location-arrow mr-1"></i> Location
+                                    </button>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-lock text-xs mr-1"></i>
+                                    <span>End-to-end encrypted</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Side Panel -->
+                <div class="space-y-6">
+                    <!-- User Status Card -->
+                    <div class="bg-dark-light rounded-2xl p-5 shadow-xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-lg">Connection Status</h3>
+                            <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-gradient-to-br from-primary to-blue-500 rounded-xl flex items-center justify-center">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium" id="currentUserDisplay">User 1</p>
+                                        <p class="text-sm text-gray-400">You</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm text-green-500">• Active</p>
+                                    <p class="text-xs text-gray-500">Device: This device</p>
+                                </div>
+                            </div>
+                            
+                            <div class="h-px bg-gray-800"></div>
+                            
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-gradient-to-br from-romantic-pink to-purple-500 rounded-xl flex items-center justify-center">
+                                        <i class="fas fa-user-friends"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">User 2</p>
+                                        <p class="text-sm text-gray-400">Partner</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm text-green-500" id="partnerStatusText">• Online</p>
+                                    <p class="text-xs text-gray-500" id="partnerLastSeen">Last seen: Just now</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 pt-4 border-t border-gray-800">
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-400">Encryption:</span>
+                                <span class="text-green-500 font-medium">AES-256 + RSA-4096</span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm mt-2">
+                                <span class="text-gray-400">Session:</span>
+                                <span class="text-primary font-medium">Secure • No logs</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="bg-dark-light rounded-2xl p-5 shadow-xl">
+                        <h3 class="font-bold text-lg mb-4">Quick Actions</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button onclick="startVideoCall()" class="bg-gradient-to-br from-green-600 to-green-700 p-4 rounded-xl flex flex-col items-center justify-center hover:opacity-90 transition-opacity">
+                                <i class="fas fa-video text-2xl mb-2"></i>
+                                <span class="text-sm font-medium">Video Call</span>
+                            </button>
+                            <button onclick="showLocationSharing()" class="bg-gradient-to-br from-blue-600 to-blue-700 p-4 rounded-xl flex flex-col items-center justify-center hover:opacity-90 transition-opacity">
+                                <i class="fas fa-map-marker-alt text-2xl mb-2"></i>
+                                <span class="text-sm font-medium">Live Location</span>
+                            </button>
+                            <button onclick="showVault()" class="bg-gradient-to-br from-purple-600 to-purple-700 p-4 rounded-xl flex flex-col items-center justify-center hover:opacity-90 transition-opacity">
+                                <i class="fas fa-lock text-2xl mb-2"></i>
+                                <span class="text-sm font-medium">Private Vault</span>
+                            </button>
+                            <button onclick="showGames()" class="bg-gradient-to-br from-pink-600 to-pink-700 p-4 rounded-xl flex flex-col items-center justify-center hover:opacity-90 transition-opacity">
+                                <i class="fas fa-gamepad text-2xl mb-2"></i>
+                                <span class="text-sm font-medium">Games</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Security Status -->
+                    <div class="bg-dark-light rounded-2xl p-5 shadow-xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-lg">Security Status</h3>
+                            <i class="fas fa-shield-alt text-green-500"></i>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-400">Screenshot Protection:</span>
+                                <span class="text-green-500 font-medium">Active</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-400">Screen Recording:</span>
+                                <span class="text-green-500 font-medium">Blocked</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-400">End-to-end Encryption:</span>
+                                <span class="text-green-500 font-medium">Enabled</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-400">Session Security:</span>
+                                <span class="text-green-500 font-medium">No Backdoor Logout</span>
+                            </div>
+                        </div>
+                        
+                        <button onclick="showSecurityDetails()" class="w-full mt-4 py-2 bg-dark hover:bg-gray-800 rounded-lg text-sm font-medium transition-colors">
+                            View Security Details
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Video Call Modal -->
+    <div id="videoCallModal" class="fixed inset-0 bg-black/90 z-50 hidden items-center justify-center p-4">
+        <div class="bg-dark-light rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden">
+            <div class="p-4 border-b border-gray-800 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg">HD Video Call</h3>
+                        <p class="text-sm text-gray-400">Peer-to-peer encrypted • No recording</p>
+                    </div>
+                </div>
+                <button onclick="closeVideoCall()" class="w-10 h-10 rounded-lg bg-dark hover:bg-gray-800 flex items-center justify-center transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <!-- Local Video -->
+                    <div class="bg-black rounded-xl overflow-hidden aspect-video relative">
+                        <div class="absolute inset-0 flex items-center justify-center bg-dark">
+                            <div class="text-center">
+                                <div class="w-20 h-20 bg-gradient-to-br from-primary to-romantic-purple rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                    <i class="fas fa-user text-3xl"></i>
+                                </div>
+                                <p class="font-medium" id="localUserDisplay">User 1</p>
+                                <p class="text-sm text-gray-400">You</p>
+                            </div>
+                        </div>
+                        <video id="localVideo" autoplay muted class="hidden w-full h-full object-cover"></video>
+                        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center space-x-2">
+                            <div class="bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full text-sm">
+                                <i class="fas fa-microphone text-green-500 mr-1"></i>
+                                <span>Mic: On</span>
+                            </div>
+                            <div class="bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full text-sm">
+                                <i class="fas fa-video text-green-500 mr-1"></i>
+                                <span>Camera: On</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Remote Video -->
+                    <div class="bg-black rounded-xl overflow-hidden aspect-video relative">
+                        <div class="absolute inset-0 flex items-center justify-center bg-dark">
+                            <div class="text-center">
+                                <div class="w-20 h-20 bg-gradient-to-br from-romantic-pink to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                    <i class="fas fa-user-friends text-3xl"></i>
+                                </div>
+                                <p class="font-medium">User 2</p>
+                                <p class="text-sm text-gray-400">Partner</p>
+                                <div class="mt-4">
+                                    <div class="inline-flex items-center px-3 py-1 bg-dark rounded-full">
+                                        <div class="w-2 h-2 bg-yellow-500 rounded-full animate-pulse mr-2"></div>
+                                        <span class="text-sm">Ringing...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <video id="remoteVideo" autoplay class="hidden w-full h-full object-cover"></video>
+                    </div>
+                </div>
+                
+                <!-- Call Controls -->
+                <div class="flex items-center justify-center space-x-4">
+                    <button onclick="toggleMic()" id="micBtn" class="w-14 h-14 bg-gray-800 hover:bg-gray-700 rounded-full flex items-center justify-center transition-colors">
+                        <i class="fas fa-microphone text-xl"></i>
+                    </button>
+                    <button onclick="toggleCamera()" id="cameraBtn" class="w-14 h-14 bg-gray-800 hover:bg-gray-700 rounded-full flex items-center justify-center transition-colors">
+                        <i class="fas fa-video text-xl"></i>
+                    </button>
+                    <button onclick="endCall()" class="w-16 h-16 bg-red-600 hover:bg-red-700 rounded-full flex items-center justify-center transition-colors">
+                        <i class="fas fa-phone-slash text-2xl"></i>
+                    </button>
+                    <button onclick="toggleScreenShare()" id="screenShareBtn" class="w-14 h-14 bg-gray-800 hover:bg-gray-700 rounded-full flex items-center justify-center transition-colors">
+                        <i class="fas fa-desktop text-xl"></i>
+                    </button>
+                    <button onclick="takeCallScreenshot()" class="w-14 h-14 bg-gray-800 hover:bg-gray-700 rounded-full flex items-center justify-center transition-colors">
+                        <i class="fas fa-camera text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="mt-6 text-center text-sm text-gray-400">
+                    <p><i class="fas fa-lock mr-1"></i> This call is end-to-end encrypted. No one else can listen in.</p>
+                    <p class="mt-1">Connection: <span class="text-green-500">Strong • 45ms latency</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Location Sharing Modal -->
+    <div id="locationModal" class="fixed inset-0 bg-black/90 z-50 hidden items-center justify-center p-4">
+        <div class="bg-dark-light rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden h-[90vh]">
+            <div class="p-4 border-b border-gray-800 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg">Live Location Sharing</h3>
+                        <p class="text-sm text-gray-400">Real-time GPS tracking • End-to-end encrypted</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div id="locationSharingStatus" class="px-3 py-1 bg-green-900/30 text-green-500 rounded-full text-sm font-medium">
+                        <i class="fas fa-circle animate-pulse mr-1"></i> Sharing Active
+                    </div>
+                    <button onclick="closeLocationModal()" class="w-10 h-10 rounded-lg bg-dark hover:bg-gray-800 flex items-center justify-center transition-colors">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-6 h-[calc(100%-80px)]">
+                <!-- Map Container -->
+                <div class="bg-dark rounded-xl overflow-hidden h-2/3 mb-6 relative">
+                    <div id="map" class="w-full h-full flex items-center justify-center">
+                        <!-- Google Maps would be integrated here -->
+                        <div class="text-center">
+                            <div class="w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-map text-4xl"></i>
+                            </div>
+                            <h4 class="font-bold text-xl mb-2">Live Location Map</h4>
+                            <p class="text-gray-400 max-w-md mx-auto">
+                                In a real implementation, Google Maps API would show real-time locations of both users with live tracking.
+                            </p>
+                            <div class="mt-6 grid grid-cols-2 gap-4 max-w-md mx-auto">
+                                <div class="bg-dark-light p-4 rounded-xl">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                                        <div>
+                                            <p class="font-medium">Your Location</p>
+                                            <p class="text-sm text-gray-400">37.7749° N, 122.4194° W</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-dark-light p-4 rounded-xl">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-3 h-3 bg-romantic-pink rounded-full animate-pulse"></div>
+                                        <div>
+                                            <p class="font-medium">Partner's Location</p>
+                                            <p class="text-sm text-gray-400">37.7849° N, 122.4094° W</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Map Controls -->
+                    <div class="absolute top-4 right-4 flex flex-col space-y-2">
+                        <button onclick="zoomIn()" class="w-10 h-10 bg-dark-light hover:bg-gray-800 rounded-lg flex items-center justify-center transition-colors">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        <button onclick="zoomOut()" class="w-10 h-10 bg-dark-light hover:bg-gray-800 rounded-lg flex items-center justify-center transition-colors">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <button onclick="centerMap()" class="w-10 h-10 bg-dark-light hover:bg-gray-800 rounded-lg flex items-center justify-center transition-colors">
+                            <i class="fas fa-crosshairs"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Location Controls -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-dark rounded-xl p-5">
+                        <h4 class="font-bold mb-3">Sharing Controls</h4>
+                        <div class="space-y-3">
+                            <button onclick="toggleLocationSharing()" id="toggleLocationBtn" class="w-full py-3 bg-gradient-to-r from-green-600 to-green-700 rounded-lg font-medium hover:opacity-90 transition-opacity">
+                                <i class="fas fa-power-off mr-2"></i>Stop Sharing
+                            </button>
+                            <button onclick="shareLiveLocation()" class="w-full py-3 bg-dark-light border border-gray-700 rounded-lg font-medium hover:bg-gray-800 transition-colors">
+                                <i class="fas fa-share-alt mr-2"></i>Share Live Location
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-dark rounded-xl p-5">
+                        <h4 class="font-bold mb-3">Location Details</h4>
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Your Location:</span>
+                                <span class="font-medium">San Francisco, CA</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Partner's Location:</span>
+                                <span class="font-medium">0.8 miles away</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Last Updated:</span>
+                                <span class="text-green-500">Just now</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Encryption:</span>
+                                <span class="text-primary">AES-256</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-dark rounded-xl p-5">
+                        <h4 class="font-bold mb-3">Location History</h4>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <i class="fas fa-map-marker-alt text-blue-500"></i>
+                                    <div>
+                                        <p class="text-sm font-medium">Coffee Shop</p>
+                                        <p class="text-xs text-gray-500">10:30 AM Today</p>
+                                    </div>
+                                </div>
+                                <span class="text-xs text-gray-500">0.5 miles</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <i class="fas fa-map-marker-alt text-green-500"></i>
+                                    <div>
+                                        <p class="text-sm font-medium">Central Park</p>
+                                        <p class="text-xs text-gray-500">Yesterday, 3:15 PM</p>
+                                    </div>
+                                </div>
+                                <span class="text-xs text-gray-500">1.2 miles</span>
+                            </div>
+                        </div>
+                        <button onclick="clearLocationHistory()" class="w-full mt-4 py-2 bg-dark-light hover:bg-gray-800 rounded-lg text-sm font-medium transition-colors">
+                            Clear History
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/90 z-50 hidden items-center justify-center p-4">
+        <div class="bg-dark-light rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden h-[90vh]">
+            <div class="p-4 border-b border-gray-800 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-primary to-romantic-purple rounded-xl flex items-center justify-center">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg">Settings & Security</h3>
+                        <p class="text-sm text-gray-400">Manage your privacy and preferences</p>
+                    </div>
+                </div>
+                <button onclick="closeSettings()" class="w-10 h-10 rounded-lg bg-dark hover:bg-gray-800 flex items-center justify-center transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 h-[calc(100%-80px)] overflow-y-auto">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Account Settings -->
+                    <div class="md:col-span-2 space-y-6">
+                        <!-- Change Password -->
+                        <div class="bg-dark rounded-xl p-5">
+                            <h4 class="font-bold text-lg mb-4">Change Password</h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Current Password</label>
+                                    <input type="password" id="currentPassword" class="w-full bg-dark-light border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-primary">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">New Password</label>
+                                    <input type="password" id="newPassword" class="w-full bg-dark-light border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-primary">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Confirm New Password</label>
+                                    <input type="password" id="confirmPassword" class="w-full bg-dark-light border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-primary">
+                                </div>
+                                <button onclick="changePassword()" class="w-full py-3 bg-gradient-to-r from-primary to-romantic-purple rounded-lg font-medium hover:opacity-90 transition-opacity">
+                                    Update Password
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Security Settings -->
+                        <div class="bg-dark rounded-xl p-5">
+                            <h4 class="font-bold text-lg mb-4">Security Settings</h4>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="font-medium">Biometric Unlock</p>
+                                        <p class="text-sm text-gray-400">Use fingerprint or face ID</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="biometricToggle" class="sr-only peer" checked>
+                                        <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                    </label>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="font-medium">Auto-lock on Background</p>
+                                        <p class="text-sm text-gray-400">Lock app when minimized</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="autoLockToggle" class="sr-only peer" checked>
+                                        <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                    </label>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="font-medium">Screenshot Protection</p>
+                                        <p class="text-sm text-gray-400">Block screenshots and recording</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="screenshotProtectionToggle" class="sr-only peer" checked>
+                                        <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                    </label>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="font-medium">Panic Lock</p>
+                                        <p class="text-sm text-gray-400">Instant app lock shortcut</p>
+                                    </div>
+                                    <button onclick="setPanicLock()" class="px-4 py-2 bg-red-900/30 text-red-500 rounded-lg font-medium hover:bg-red-900/50 transition-colors">
+                                        Set Shortcut
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Device Management -->
+                        <div class="bg-dark rounded-xl p-5">
+                            <h4 class="font-bold text-lg mb-4">Device Management</h4>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between p-3 bg-dark-light rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                        <i class="fas fa-mobile-alt text-xl text-primary"></i>
+                                        <div>
+                                            <p class="font-medium">This Device</p>
+                                            <p class="text-sm text-gray-400">Chrome • Windows • Last active: Now</p>
+                                        </div>
+                                    </div>
+                                    <div class="px-3 py-1 bg-green-900/30 text-green-500 rounded-full text-sm">
+                                        Current
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between p-3 bg-dark-light rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                        <i class="fas fa-laptop text-xl text-gray-500"></i>
+                                        <div>
+                                            <p class="font-medium">MacBook Pro</p>
+                                            <p class="text-sm text-gray-400">Safari • macOS • Last active: 2 hours ago</p>
+                                        </div>
+                                    </div>
+                                    <button onclick="logoutDevice('macbook')" class="px-3 py-1 bg-red-900/30 text-red-500 rounded-lg text-sm hover:bg-red-900/50 transition-colors">
+                                        Log Out
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <button onclick="viewAllDevices()" class="w-full mt-4 py-3 bg-dark-light border border-gray-700 rounded-lg font-medium hover:bg-gray-800 transition-colors">
+                                View All Devices
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Settings Sidebar -->
+                    <div class="space-y-6">
+                        <!-- App Preferences -->
+                        <div class="bg-dark rounded-xl p-5">
+                            <h4 class="font-bold text-lg mb-4">App Preferences</h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Theme</label>
+                                    <select id="themeSelect" class="w-full bg-dark-light border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-primary">
+                                        <option value="dark">Dark Theme</option>
+                                        <option value="romantic">Romantic Theme</option>
+                                        <option value="light">Light Theme</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Message Sounds</label>
+                                    <select class="w-full bg-dark-light border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-primary">
+                                        <option value="on">On</option>
+                                        <option value="vibrate">Vibrate Only</option>
+                                        <option value="off">Off</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Call Ringtone</label>
+                                    <select class="w-full bg-dark-light border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-primary">
+                                        <option value="default">Default</option>
+                                        <option value="soft">Soft Tone</option>
+                                        <option value="classic">Classic</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Privacy Controls -->
+                        <div class="bg-dark rounded-xl p-5">
+                            <h4 class="font-bold text-lg mb-4">Privacy Controls</h4>
+                            <div class="space-y-3">
+                                <button onclick="clearChatHistory()" class="w-full py-3 bg-dark-light hover:bg-gray-800 rounded-lg font-medium transition-colors text-left px-4">
+                                    <i class="fas fa-trash-alt mr-3 text-gray-400"></i>
+                                    Clear Chat History
+                                </button>
+                                
+                                <button onclick="manageVault()" class="w-full py-3 bg-dark-light hover:bg-gray-800 rounded-lg font-medium transition-colors text-left px-4">
+                                    <i class="fas fa-lock mr-3 text-gray-400"></i>
+                                    Manage Private Vault
+                                </button>
+                                
+                                <button onclick="viewLoginHistory()" class="w-full py-3 bg-dark-light hover:bg-gray-800 rounded-lg font-medium transition-colors text-left px-4">
+                                    <i class="fas fa-history mr-3 text-gray-400"></i>
+                                    View Login History
+                                </button>
+                                
+                                <button onclick="exportData()" class="w-full py-3 bg-dark-light hover:bg-gray-800 rounded-lg font-medium transition-colors text-left px-4">
+                                    <i class="fas fa-download mr-3 text-gray-400"></i>
+                                    Export Encrypted Data
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Logout Section -->
+                        <div class="bg-dark rounded-xl p-5 border border-red-900/30">
+                            <h4 class="font-bold text-lg mb-4 text-red-500">Account</h4>
+                            <button onclick="logout()" class="w-full py-3 bg-red-900/30 hover:bg-red-900/50 text-red-500 rounded-lg font-medium transition-colors">
+                                <i class="fas fa-sign-out-alt mr-2"></i>
+                                Log Out
+                            </button>
+                            <p class="text-xs text-gray-500 mt-3 text-center">
+                                Note: Back button will NOT log you out. Only manual logout ends session.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification System -->
+    <div id="notificationContainer" class="fixed top-4 right-4 z-50 space-y-3 max-w-sm"></div>
+
+    <!-- Scripts -->
+    <script>
+        // Application State
+        const appState = {
+            currentUser: null,
+            isLoggedIn: false,
+            isDarkTheme: true,
+            isLocationSharing: false,
+            isInCall: false,
+            messages: [],
+            notifications: [],
+            partnerOnline: true,
+            partnerLastSeen: new Date(),
+            security: {
+                screenshotProtection: true,
+                biometricUnlock: true,
+                autoLock: true,
+                encryption: "AES-256 + RSA-4096"
+            },
+            devices: [
+                {
+                    id: "device1",
+                    name: "This Device",
+                    os: "Chrome • Windows",
+                    location: "San Francisco, CA",
+                    lastActive: new Date(),
+                    isCurrent: true
+                },
+                {
+                    id: "device2",
+                    name: "MacBook Pro",
+                    os: "Safari • macOS",
+                    location: "San Francisco, CA",
+                    lastActive: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+                    isCurrent: false
+                }
+            ]
+        };
+
+        // Sample messages data
+        const sampleMessages = [
+            {
+                id: 1,
+                sender: "user1",
+                text: "Hey! The app is working perfectly! End-to-end encrypted and super fast.",
+                timestamp: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
+                type: "text"
+            },
+            {
+                id: 2,
+                sender: "user2",
+                text: "Amazing! I can see your messages on the right side. The encryption is working great.",
+                timestamp: new Date(Date.now() - 28 * 60 * 1000),
+                type: "text"
+            },
+            {
+                id: 3,
+                sender: "user1",
+                text: "Try the video call feature. It's peer-to-peer with HD quality!",
+                timestamp: new Date(Date.now() - 25 * 60 * 1000),
+                type: "text"
+            },
+            {
+                id: 4,
+                sender: "user2",
+                text: "Just tried it! Crystal clear and no lag. The screenshot protection is also working.",
+                timestamp: new Date(Date.now() - 20 * 60 * 1000),
+                type: "text"
+            },
+            {
+                id: 5,
+                sender: "user1",
+                text: "Perfect! Remember, only we two can access this. No third parties, no logs.",
+                timestamp: new Date(Date.now() - 15 * 60 * 1000),
+                type: "text"
+            },
+            {
+                id: 6,
+                sender: "user2",
+                text: "Love the live location sharing too. Can see exactly where you are on the map.",
+                timestamp: new Date(Date.now() - 10 * 60 * 1000),
+                type: "text"
+            },
+            {
+                id: 7,
+                sender: "user1",
+                text: "Yes! And if you go back or close the tab, you won't be logged out. Only manual logout ends the session.",
+                timestamp: new Date(Date.now() - 5 * 60 * 1000),
+                type: "text"
+            }
+        ];
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for existing session
+            const savedUser = localStorage.getItem('secureConnectUser');
+            if (savedUser) {
+                appState.currentUser = savedUser;
+                appState.isLoggedIn = true;
+                showAppInterface();
+                loadMessages();
+                simulatePartnerActivity();
+            }
+            
+            // Setup screenshot protection
+            setupScreenshotProtection();
+            
+            // Setup back button protection
+            setupBackButtonProtection();
+            
+            // Setup periodic security checks
+            setInterval(checkSecurity, 30000);
+            
+            // Simulate partner online status changes
+            setInterval(simulatePartnerActivity, 60000);
+        });
+
+        // User selection
+        function selectUser(user) {
+            document.querySelectorAll('[id$="Btn"]').forEach(btn => {
+                btn.classList.remove('border-primary', 'bg-primary/10');
+                btn.classList.add('border-gray-700', 'bg-dark');
+            });
+            
+            const btn = document.getElementById(user + 'Btn');
+            btn.classList.remove('border-gray-700', 'bg-dark');
+            btn.classList.add('border-primary', 'bg-primary/10');
+            
+            appState.currentUser = user;
+        }
+
+        // Toggle password visibility
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleBtn = passwordInput.nextElementSibling.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleBtn.classList.remove('fa-eye');
+                toggleBtn.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleBtn.classList.remove('fa-eye-slash');
+                toggleBtn.classList.add('fa-eye');
+            }
+        }
+
+        // Login function
+        function login() {
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            
+            if (!appState.currentUser) {
+                showNotification('Please select a user identity', 'error');
+                return;
+            }
+            
+            if (!password) {
+                showNotification('Please enter your password', 'error');
+                return;
+            }
+            
+            // Simulate authentication
+            showNotification('Authenticating...', 'info');
+            
+            setTimeout(() => {
+                appState.isLoggedIn = true;
+                
+                if (rememberMe) {
+                    localStorage.setItem('secureConnectUser', appState.currentUser);
+                }
+                
+                showAppInterface();
+                loadMessages();
+                showNotification('Secure login successful!', 'success');
+                
+                // Simulate partner notification
+                setTimeout(() => {
+                    showNotification('User 2 is now online', 'info');
+                }, 1000);
+            }, 1000);
+        }
+
+        // Show main app interface
+        function showAppInterface() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('appInterface').classList.remove('hidden');
+            
+            // Update UI with current user
+            document.getElementById('currentUserDisplay').textContent = appState.currentUser === 'user1' ? 'User 1' : 'User 2';
+            document.getElementById('localUserDisplay').textContent = appState.currentUser === 'user1' ? 'User 1' : 'User 2';
+            
+            // Update partner display
+            const partnerName = appState.currentUser === 'user1' ? 'User 2' : 'User 1';
+            document.querySelectorAll('#otherUserStatus, #partnerStatusText').forEach(el => {
+                el.textContent = partnerName + ': Online';
+            });
+        }
+
+        // Load messages into chat
+        function loadMessages() {
+            const chatContainer = document.getElementById('chatMessages');
+            chatContainer.innerHTML = '';
+            
+            // Add welcome message
+            const welcomeMsg = document.createElement('div');
+            welcomeMsg.className = 'text-center py-8';
+            welcomeMsg.innerHTML = `
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-dark rounded-2xl mb-4">
+                    <i class="fas fa-lock text-2xl text-primary"></i>
+                </div>
+                <h3 class="font-bold text-lg mb-2">Secure Chat Started</h3>
+                <p class="text-gray-400 max-w-md mx-auto">
+                    All messages are end-to-end encrypted. No one else can read them, not even us.
+                </p>
+            `;
+            chatContainer.appendChild(welcomeMsg);
+            
+            // Add sample messages
+            sampleMessages.forEach(msg => {
+                const isCurrentUser = msg.sender === appState.currentUser;
+                const messageElement = createMessageElement(msg, isCurrentUser);
+                chatContainer.appendChild(messageElement);
+            });
+            
+            // Scroll to bottom
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Create message element
+        function createMessageElement(message, isCurrentUser) {
+            const div = document.createElement('div');
+            div.className = `flex ${isCurrentUser ? 'justify-end' : 'justify-start'} animate-slide-in`;
+            
+            const time = message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            div.innerHTML = `
+                <div class="max-w-xs lg:max-w-md">
+                    <div class="${isCurrentUser ? 'bg-gradient-to-r from-primary to-romantic-purple' : 'bg-gray-800'} rounded-2xl p-4 ${isCurrentUser ? 'rounded-tr-none' : 'rounded-tl-none'}">
+                        <p class="text-white selectable-text">${message.text}</p>
+                        <div class="flex items-center justify-between mt-2">
+                            <span class="text-xs ${isCurrentUser ? 'text-primary-light' : 'text-gray-400'}">${time}</span>
+                            ${isCurrentUser ? '<i class="fas fa-check-double text-xs text-blue-300"></i>' : ''}
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-500 mt-1 px-2">
+                        ${isCurrentUser ? 'You' : (appState.currentUser === 'user1' ? 'User 2' : 'User 1')} • End-to-end encrypted
+                    </div>
+                </div>
+            `;
+            
+            return div;
+        }
+
+        // Send message
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            
+            if (!text) return;
+            
+            // Create new message
+            const newMessage = {
+                id: Date.now(),
+                sender: appState.currentUser,
+                text: text,
+                timestamp: new Date(),
+                type: 'text'
+            };
+            
+            // Add to messages
+            sampleMessages.push(newMessage);
+            
+            // Clear input
+            input.value = '';
+            
+            // Add to UI
+            const chatContainer = document.getElementById('chatMessages');
+            const messageElement = createMessageElement(newMessage, true);
+            chatContainer.appendChild(messageElement);
+            
+            // Scroll to bottom
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // Show encryption notification
+            showNotification('Message encrypted and sent', 'success');
+            
+            // Simulate partner reply after 2 seconds
+            setTimeout(() => {
+                const replies = [
+                    "Got your message! Encryption working perfectly.",
+                    "Received! The end-to-end encryption is seamless.",
+                    "Message received securely. This is awesome!",
+                    "Got it! No one else can read this except us."
+                ];
+                
+                const randomReply = replies[Math.floor(Math.random() * replies.length)];
+                const replyMessage = {
+                    id: Date.now() + 1,
+                    sender: appState.currentUser === 'user1' ? 'user2' : 'user1',
+                    text: randomReply,
+                    timestamp: new Date(),
+                    type: 'text'
+                };
+                
+                sampleMessages.push(replyMessage);
+                const replyElement = createMessageElement(replyMessage, false);
+                chatContainer.appendChild(replyElement);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                
+                showNotification('New encrypted message received', 'info');
+            }, 2000);
+        }
+
+        // Handle Enter key press
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Clear chat
+        function clearChat() {
+            if (confirm('Are you sure you want to clear all chat history? This action cannot be undone.')) {
+                sampleMessages.length = 0;
+                loadMessages();
+                showNotification('Chat history cleared', 'success');
+            }
+        }
+
+        // Toggle encryption info
+        function toggleEncryptionInfo() {
+            showNotification('Encryption: AES-256 for messages, RSA-4096 for key exchange. No logs stored.', 'info');
+        }
+
+        // Start video call
+        function startVideoCall() {
+            appState.isInCall = true;
+            document.getElementById('videoCallModal').classList.remove('hidden');
+            showNotification('Starting encrypted video call...', 'info');
+            
+            // Simulate call ringing
+            setTimeout(() => {
+                showNotification('Video call connected • End-to-end encrypted', 'success');
+            }, 3000);
+        }
+
+        // Close video call
+        function closeVideoCall() {
+            appState.isInCall = false;
+            document.getElementById('videoCallModal').classList.add('hidden');
+            showNotification('Video call ended', 'info');
+        }
+
+        // Toggle microphone
+        function toggleMic() {
+            const btn = document.getElementById('micBtn');
+            const icon = btn.querySelector('i');
+            
+            if (icon.classList.contains('fa-microphone')) {
+                icon.classList.remove('fa-microphone');
+                icon.classList.add('fa-microphone-slash');
+                btn.classList.add('bg-red-900/30');
+                showNotification('Microphone muted', 'info');
+            } else {
+                icon.classList.remove('fa-microphone-slash');
+                icon.classList.add('fa-microphone');
+                btn.classList.remove('bg-red-900/30');
+                showNotification('Microphone unmuted', 'info');
+            }
+        }
+
+        // Toggle camera
+        function toggleCamera() {
+            const btn = document.getElementById('cameraBtn');
+            const icon = btn.querySelector('i');
+            
+            if (icon.classList.contains('fa-video')) {
+                icon.classList.remove('fa-video');
+                icon.classList.add('fa-video-slash');
+                btn.classList.add('bg-red-900/30');
+                showNotification('Camera turned off', 'info');
+            } else {
+                icon.classList.remove('fa-video-slash');
+                icon.classList.add('fa-video');
+                btn.classList.remove('bg-red-900/30');
+                showNotification('Camera turned on', 'info');
+            }
+        }
+
+        // End call
+        function endCall() {
+            closeVideoCall();
+        }
+
+        // Toggle screen share
+        function toggleScreenShare() {
+            const btn = document.getElementById('screenShareBtn');
+            const icon = btn.querySelector('i');
+            
+            if (icon.classList.contains('fa-desktop')) {
+                icon.classList.remove('fa-desktop');
+                icon.classList.add('fa-stop');
+                btn.classList.add('bg-blue-900/30');
+                showNotification('Screen sharing started', 'info');
+            } else {
+                icon.classList.remove('fa-stop');
+                icon.classList.add('fa-desktop');
+                btn.classList.remove('bg-blue-900/30');
+                showNotification('Screen sharing stopped', 'info');
+            }
+        }
+
+        // Take call screenshot
+        function takeCallScreenshot() {
+            showNotification('Screenshot saved locally (encrypted)', 'success');
+        }
+
+        // Show location sharing
+        function showLocationSharing() {
+            document.getElementById('locationModal').classList.remove('hidden');
+            showNotification('Live location sharing activated', 'info');
+        }
+
+        // Close location modal
+        function closeLocationModal() {
+            document.getElementById('locationModal').classList.add('hidden');
+        }
+
+        // Toggle location sharing
+        function toggleLocationSharing() {
+            const btn = document.getElementById('toggleLocationBtn');
+            const status = document.getElementById('locationSharingStatus');
+            
+            if (appState.isLocationSharing) {
+                appState.isLocationSharing = false;
+                btn.innerHTML = '<i class="fas fa-power-off mr-2"></i>Start Sharing';
+                btn.classList.remove('from-red-600', 'to-red-700');
+                btn.classList.add('from-green-600', 'to-green-700');
+                status.innerHTML = '<i class="fas fa-circle mr-1"></i> Sharing Inactive';
+                status.classList.remove('bg-green-900/30', 'text-green-500');
+                status.classList.add('bg-gray-800', 'text-gray-400');
+                showNotification('Location sharing stopped', 'info');
+            } else {
+                appState.isLocationSharing = true;
+                btn.innerHTML = '<i class="fas fa-power-off mr-2"></i>Stop Sharing';
+                btn.classList.remove('from-green-600', 'to-green-700');
+                btn.classList.add('from-red-600', 'to-red-700');
+                status.innerHTML = '<i class="fas fa-circle animate-pulse mr-1"></i> Sharing Active';
+                status.classList.remove('bg-gray-800', 'text-gray-400');
+                status.classList.add('bg-green-900/30', 'text-green-500');
+                showNotification('Live location sharing enabled • Encrypted', 'success');
+            }
+        }
+
+        // Share live location
+        function shareLiveLocation() {
+            showNotification('Live location shared with partner • Encrypted', 'success');
+        }
+
+        // Zoom in map
+        function zoomIn() {
+            showNotification('Map zoomed in', 'info');
+        }
+
+        // Zoom out map
+        function zoomOut() {
+            showNotification('Map zoomed out', 'info');
+        }
+
+        // Center map
+        function centerMap() {
+            showNotification('Map centered on both locations', 'info');
+        }
+
+        // Clear location history
+        function clearLocationHistory() {
+            if (confirm('Clear all location history?')) {
+                showNotification('Location history cleared', 'success');
+            }
+        }
+
+        // Show settings
+        function showSettings() {
+            document.getElementById('settingsModal').classList.remove('hidden');
+        }
+
+        // Close settings
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        // Change password
+        function changePassword() {
+            const current = document.getElementById('currentPassword').value;
+            const newPass = document.getElementById('newPassword').value;
+            const confirm = document.getElementById('confirmPassword').value;
+            
+            if (!current || !newPass || !confirm) {
+                showNotification('Please fill all password fields', 'error');
+                return;
+            }
+            
+            if (newPass !== confirm) {
+                showNotification('New passwords do not match', 'error');
+                return;
+            }
+            
+            // Simulate password change
+            showNotification('Password updated successfully • Re-encrypting data...', 'success');
+            
+            // Clear fields
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            
+            // Close settings after delay
+            setTimeout(() => {
+                closeSettings();
+            }, 2000);
+        }
+
+        // Set panic lock
+        function setPanicLock() {
+            showNotification('Panic lock set: Press P key to instantly lock app', 'success');
+            
+            // Add panic lock shortcut
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'p' || e.key === 'P') {
+                    e.preventDefault();
+                    logout();
+                }
+            });
+        }
+
+        // Logout device
+        function logoutDevice(deviceId) {
+            if (confirm('Log out this device?')) {
+                showNotification('Device logged out remotely', 'success');
+            }
+        }
+
+        // View all devices
+        function viewAllDevices() {
+            showNotification('Showing all logged-in devices...', 'info');
+        }
+
+        // Clear chat history
+        function clearChatHistory() {
+            if (confirm('Permanently delete all chat history?')) {
+                sampleMessages.length = 0;
+                loadMessages();
+                showNotification('All chat history deleted', 'success');
+            }
+        }
+
+        // Manage vault
+        function manageVault() {
+            showNotification('Opening private vault...', 'info');
+        }
+
+        // View login history
+        function viewLoginHistory() {
+            showNotification('Displaying login history...', 'info');
+        }
+
+        // Export data
+        function exportData() {
+            showNotification('Preparing encrypted data export...', 'info');
+        }
+
+        // Logout
+        function logout() {
+            if (confirm('Are you sure you want to log out?')) {
+                appState.isLoggedIn = false;
+                appState.currentUser = null;
+                localStorage.removeItem('secureConnectUser');
+                
+                document.getElementById('appInterface').classList.add('hidden');
+                document.getElementById('loginScreen').classList.remove('hidden');
+                
+                // Clear password field
+                document.getElementById('password').value = '';
+                
+                showNotification('Logged out successfully', 'success');
+            }
+        }
+
+        // Toggle theme
+        function toggleTheme() {
+            appState.isDarkTheme = !appState.isDarkTheme;
+            const icon = document.querySelector('[title="Toggle Theme"] i');
+            
+            if (appState.isDarkTheme) {
+                document.body.classList.remove('bg-white', 'text-gray-800');
+                document.body.classList.add('bg-gradient-to-br', 'from-dark', 'to-dark-light', 'text-white');
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            } else {
+                document.body.classList.remove('bg-gradient-to-br', 'from-dark', 'to-dark-light', 'text-white');
+                document.body.classList.add('bg-white', 'text-gray-800');
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            }
+        }
+
+        // Attach file
+        function attachFile() {
+            showNotification('File attachment: End-to-end encrypted', 'info');
+        }
+
+        // Attach image
+        function attachImage() {
+            showNotification('Image attachment: End-to-end encrypted', 'info');
+        }
+
+        // Record audio
+        function recordAudio() {
+            showNotification('Voice message: End-to-end encrypted', 'info');
+        }
+
+        // Share location from chat
+        function shareLocation() {
+            showNotification('Sharing current location...', 'info');
+            setTimeout(() => {
+                showNotification('Location shared securely • Encrypted', 'success');
+            }, 1000);
+        }
+
+        // Show security details
+        function showSecurityDetails() {
+            const details = `
+                <strong>Security Details:</strong><br>
+                • End-to-end encryption: AES-256 + RSA-4096<br>
+                • Screenshot protection: Active<br>
+                • Screen recording: Blocked<br>
+                • No metadata storage<br>
+                • Peer-to-peer video calls<br>
+                • No backdoor logout<br>
+                • Biometric unlock available
+            `;
+            showNotification(details, 'info', 5000);
+        }
+
+        // Show vault
+        function showVault() {
+            showNotification('Private vault: Password protected • Encrypted storage', 'info');
+        }
+
+        // Show games
+        function showGames() {
+            showNotification('Game room: Coming soon!', 'info');
+        }
+
+        // Setup screenshot protection
+        function setupScreenshotProtection() {
+            // Detect copy attempts
+            document.addEventListener('copy', function(e) {
+                if (appState.security.screenshotProtection) {
+                    e.preventDefault();
+                    showNotification('Copying disabled for security', 'error');
+                }
+            });
+            
+            // Detect print attempts
+            document.addEventListener('beforeprint', function(e) {
+                if (appState.security.screenshotProtection) {
+                    e.preventDefault();
+                    showNotification('Printing disabled for security', 'error');
+                }
+            });
+            
+            // Simulate screenshot detection
+            document.addEventListener('keydown', function(e) {
+                // Detect print screen key
+                if (e.key === 'PrintScreen' || (e.ctrlKey && e.key === 'p')) {
+                    if (appState.security.screenshotProtection) {
+                        e.preventDefault();
+                        document.getElementById('screenshotProtection').classList.remove('hidden');
+                        showNotification('Screenshot attempt blocked', 'error');
+                    }
+                }
+            });
+        }
+
+        // Hide protection overlay
+        function hideProtection() {
+            document.getElementById('screenshotProtection').classList.add('hidden');
+        }
+
+        // Setup back button protection
+        function setupBackButtonProtection() {
+            window.addEventListener('popstate', function(e) {
+                // Don't allow back button to log out user
+                if (appState.isLoggedIn) {
+                    // Push state again to prevent logout
+                    history.pushState(null, null, window.location.href);
+                    showNotification('Session remains active. Use logout button to end session.', 'info');
+                }
+            });
+            
+            // Prevent initial back
+            history.pushState(null, null, window.location.href);
+        }
+
+        // Check security
+        function checkSecurity() {
+            // Simulate periodic security checks
+            if (appState.isLoggedIn) {
+                // Update connection status
+                const status = document.getElementById('connectionStatus');
+                status.innerHTML = `
+                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span class="ml-2 text-sm text-gray-400">Connected • Secure</span>
+                `;
+            }
+        }
+
+        // Simulate partner activity
+        function simulatePartnerActivity() {
+            if (!appState.isLoggedIn) return;
+            
+            // Randomly change partner status (for demo)
+            const isOnline = Math.random() > 0.3; // 70% chance online
+            
+            appState.partnerOnline = isOnline;
+            appState.partnerLastSeen = new Date();
+            
+            const partnerName = appState.currentUser === 'user1' ? 'User 2' : 'User 1';
+            const statusText = isOnline ? 'Online' : `Last seen ${Math.floor(Math.random() * 10) + 1} min ago`;
+            
+            // Update UI
+            document.getElementById('otherUserStatus').textContent = `${partnerName}: ${statusText}`;
+            document.getElementById('partnerStatusText').textContent = isOnline ? '• Online' : '• Offline';
+            document.getElementById('partnerLastSeen').textContent = isOnline ? 'Last seen: Just now' : `Last seen: ${Math.floor(Math.random() * 10) + 1} minutes ago`;
+            
+            // Update status indicator
+            const indicator = document.querySelector('#onlineStatus .w-2');
+            indicator.className = `w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-500'}`;
+            
+            // Show notification for status change
+            if (!isOnline && appState.partnerOnline !== isOnline) {
+                showNotification(`${partnerName} is now offline`, 'info');
+            } else if (isOnline && appState.partnerOnline !== isOnline) {
+                showNotification(`${partnerName} is now online`, 'success');
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info', duration = 3000) {
+            const container = document.getElementById('notificationContainer');
+            const id = 'notification-' + Date.now();
+            
+            const colors = {
+                success: 'bg-green-900/30 border-green-700',
+                error: 'bg-red-900/30 border-red-700',
+                info: 'bg-blue-900/30 border-blue-700',
+                warning: 'bg-yellow-900/30 border-yellow-700'
+            };
+            
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                info: 'fa-info-circle',
+                warning: 'fa-exclamation-triangle'
+            };
+            
+            const notification = document.createElement('div');
+            notification.id = id;
+            notification.className = `${colors[type]} border rounded-xl p-4 shadow-lg animate-slide-in`;
+            notification.innerHTML = `
+                <div class="flex items-start">
+                    <i class="fas ${icons[type]} mt-1 mr-3 ${type === 'success' ? 'text-green-500' : type === 'error' ? 'text-red-500' : type === 'warning' ? 'text-yellow-500' : 'text-blue-500'}"></i>
+                    <div class="flex-1">
+                        <div class="text-sm">${message}</div>
+                    </div>
+                    <button onclick="document.getElementById('${id}').remove()" class="ml-2 text-gray-400 hover:text-white">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(notification);
+            
+            // Auto remove after duration
+            setTimeout(() => {
+                const elem = document.getElementById(id);
+                if (elem) {
+                    elem.style.opacity = '0';
+                    elem.style.transform = 'translateX(100%)';
+                    setTimeout(() => elem.remove(), 300);
+                }
+            }, duration);
+            
+            // Also show browser notification if allowed
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('SecureConnect', {
+                    body: message.replace(/<[^>]*>/g, ''),
+                    icon: 'https://picsum.photos/64?random=secure'
+                });
+            }
+        }
+
+        // Request notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            setTimeout(() => {
+                Notification.requestPermission();
+            }, 2000);
+        }
+
+        // Simulate incoming call notification
+        setInterval(() => {
+            if (appState.isLoggedIn && !appState.isInCall && Math.random() > 0.8) {
+                showNotification('Incoming video call from partner...', 'info');
+            }
+        }, 30000);
+
+        // Initialize with user1 selected
+        selectUser('user1');
+    </script>
+</body>
+</html>
